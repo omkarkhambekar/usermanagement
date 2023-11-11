@@ -51,7 +51,7 @@ public class AuthControllerTests {
             mockMvc.perform(MockMvcRequestBuilders.post("/auth/register")
                             .contentType(MediaType.APPLICATION_JSON)
                             .content("{\"email\": \"test@example.com\", \"username\": \"testUser\", \"password\": \"password\"}"))
-                    .andExpect(status().isOk());
+                    .andExpect(status().isCreated());
         } catch (Exception e) {
 
         }

@@ -1,6 +1,7 @@
 package dev.omkar.usermanagement.service;
 
 import dev.omkar.usermanagement.Entity.User;
+import dev.omkar.usermanagement.Exceptions.DuplicateEmailException;
 import dev.omkar.usermanagement.dto.UserDto;
 import dev.omkar.usermanagement.repository.UserRepository;
 import io.jsonwebtoken.Jwts;
@@ -32,7 +33,13 @@ public class AuthService {
     private boolean isValidEmail(String email) {
         return EmailValidator.getInstance().isValid(email);
     }
+
     public UserDto signUp(String email, String username, String password ) {
+        Optional<User> existingUser = userRepository.findByEmail(email);
+
+        if (existingUser.isPresent()) {
+            throw new DuplicateEmailException("User with this email already exists.");
+        }
 
         if (StringUtils.isAnyBlank(email, username, password)) {
             throw new IllegalArgumentException("Email, username, and password must not be blank.");
@@ -41,6 +48,7 @@ public class AuthService {
         if (!isValidEmail(email)) {
             throw new IllegalArgumentException("Invalid email address.");
         }
+
 
         User user = new User();
         user.setEmail(email);
@@ -62,7 +70,6 @@ public class AuthService {
 
         Optional<User> userOptional = userRepository.findByEmail(email);
 
-
         if (userOptional.isEmpty()) {
             throw new IllegalArgumentException("Wrong username or password.");
         }
@@ -74,12 +81,15 @@ public class AuthService {
         }
         String token = RandomStringUtils.randomAlphanumeric(30);
 
+        String setCookieHeader = String.format("auth-token=%s; Path=/; HttpOnly", token);
+
+
         MacAlgorithm alg = Jwts.SIG.HS256;
         SecretKey key = alg.key().build();
         UserDto userDto = UserDto.from(user);
         MultiValueMapAdapter<String, String> headers = new MultiValueMapAdapter<>(new HashMap<>());
-        headers.add(HttpHeaders.SET_COOKIE, "auth-token:" + token);
-
+        //headers.add(HttpHeaders.SET_COOKIE, "auth-token:" + token);
+        headers.add(HttpHeaders.SET_COOKIE, setCookieHeader);
         ResponseEntity<UserDto> response = new ResponseEntity<>(userDto, headers, HttpStatus.OK);
         return response;
 

@@ -25,20 +25,21 @@ public class AuthController {
     public ResponseEntity<UserDto> login(@RequestBody LoginRequestDto request) {
         ResponseEntity<UserDto> response = authService.login(request.getEmail(), request.getPassword());
 
-        if(response == null) {
+        if(response == null || response.getStatusCode() != HttpStatus.OK) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
         else {
-            return authService.login(request.getEmail(),request.getPassword());
+            return response;
         }
 
     }
 
     @Operation(summary = "register a new User")
     @PostMapping("/register")
-    @ResponseStatus(HttpStatus.CREATED)
     public ResponseEntity<UserDto> signUp(@RequestBody RegisterRequestDto request) {
         UserDto userDto = authService.signUp(request.getEmail(),request.getUsername(), request.getPassword());
-        return new ResponseEntity<>(userDto, HttpStatus.OK);
+        return new ResponseEntity<>(userDto, HttpStatus.CREATED);
     }
+
+
 }
